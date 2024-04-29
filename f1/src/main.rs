@@ -47,6 +47,34 @@ fn main() {
     println!("Maximum distance between different vertices: {}", max_dist);
     println!("Median distance between different vertices: {:.2}", median_dist);
 
+
+    let mut distances: Vec<Option<u32>> = vec![None; graph.n];
+    distances_bfs(start_vertex, &graph, &mut distances);
+
+    // Convert and sort distances
+    // Convert distances from Option<u32> to a list of tuples (vertex index, distance)
+    let mut distances_list: Vec<(usize, u32)> = distances.iter().enumerate()
+    .filter_map(|(i, &dist)| dist.map(|d| (i, d)))
+    .collect();
+
+    // Sort the list by distance    
+    distances_list.sort_by_key(|&(_, distance)| distance);
+
+    // Step 3: Extract the 15 highest and lowest distances
+    let num_distances = distances_list.len();
+    let lowest_15 = &distances_list[..15]; // First 15 distances (lowest)
+    let highest_15 = &distances_list[num_distances - 15..]; // Last 15 distances (highest)
+
+    // Step 4: Print the lowest and highest distances
+    println!("The 15 distances with the lowest values:");
+    for &(index, distance) in lowest_15 {
+        println!("Vertex {}: Distance {}", index, distance);
+    }
+
+    println!("The 15 distances with the highest values:");
+    for &(index, distance) in highest_15.iter().rev() {
+        println!("Vertex {}: Distance {}", index, distance);
+    }
 }
 
 
@@ -108,45 +136,10 @@ fn adjacency_list(edges: Vec<(usize, usize)>, unique_nodes: HashSet<usize>) -> V
     graph_list
 }
 
-// Function to compute and print distance from the start vertex using BFS
-fn compute_and_print_distance_bfs(start: Vertex, graph: &Graph) {
-    let mut distance: Vec<Option<u32>> = vec![None; graph.n];
-    distance[start] = Some(0); // Distance from start to itself is 0
-
-    let mut queue: VecDeque<Vertex> = VecDeque::new();
-    queue.push_back(start);
-
-    while let Some(v) = queue.pop_front() {
-        for &u in &graph.outedges[v] {
-            if distance[u].is_none() {
-                distance[u] = Some(distance[v].unwrap() + 1);
-                queue.push_back(u);
-            }
-        }
-    }
-}
-
-// // Function to mark components in the graph using BFS
-// fn mark_component_bfs(vertex: Vertex, graph: &Graph, component: &mut Vec<Option<Component>>, component_no: Component) {
-//     component[vertex] = Some(component_no);
-
-//     let mut queue = VecDeque::new();
-//     queue.push_back(vertex);
-
-//     while let Some(v) = queue.pop_front() {
-//         for &w in &graph.outedges[v] {
-//             if component[w].is_none() {
-//                 component[w] = Some(component_no);
-//                 queue.push_back(w);
-//             }
-//         }
-//     }
-// }
-
 // Function to calculate graph statistics (mean, max, median distances) from a starting vertex
 fn calculate_graph_statistics(graph: &Graph, start_vertex: Vertex) -> (f64, u32, f64) {
     let mut distances = vec![None; graph.n];
-    compute_distances(start_vertex, graph, &mut distances);
+    distances_bfs(start_vertex, graph, &mut distances);
 
     // Filter out None values (unreachable vertices)
     let filtered_distances: Vec<u32> = distances.iter().filter_map(|&dist| dist).collect();
@@ -164,7 +157,7 @@ fn calculate_graph_statistics(graph: &Graph, start_vertex: Vertex) -> (f64, u32,
 }
 
 // Helper function to calculate distances from the start vertex using BFS
-fn compute_distances(start: Vertex, graph: &Graph, distances: &mut Vec<Option<u32>>) {
+fn distances_bfs(start: Vertex, graph: &Graph, distances: &mut Vec<Option<u32>>) {
     distances[start] = Some(0);
     let mut queue = VecDeque::new();
     queue.push_back(start);
