@@ -2,7 +2,6 @@ use std::collections::{HashSet, VecDeque, HashMap};
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::vec;
-
 type Vertex = usize; // Define Vertex as usize
 type Component = usize; // Define Component type as usize
 
@@ -29,30 +28,25 @@ fn main() {
 
     // Run BFS from the starting vertex (you can change this to any vertex you want)
     let start_vertex = 0;
-    let bfs = compute_and_print_distance_bfs(start_vertex, &graph);
 
-    // Print the adjacency list (adjacency map)
-    println!("Adjacency map:");
-    for (vertex, neighbors) in graph.outedges.iter().enumerate() {
-        print!("Vertex {}: ", vertex);
-        for &neighbor in neighbors {
-            print!("{} ", neighbor);
-        }
-        println!();
-    }
+    // // Print the adjacency list (adjacency map)
+    // println!("Adjacency map:");
+    // for (vertex, neighbors) in graph.outedges.iter().enumerate() {
+    //     print!("Vertex {}: ", vertex);
+    //     for &neighbor in neighbors {
+    //         print!("{} ", neighbor);
+    //     }
+    //     println!();
+    // }
 
-    // Mark and print components using BFS
-    let mut component: Vec<Option<Component>> = vec![None; n];
-    let mut component_no = 0;
+    // Calculate mean, max, and median distances
+    let (mean_dist, max_dist, median_dist) = calculate_graph_statistics(&graph, start_vertex);
 
-    // Iterate through each vertex to mark and assign components
-    for v in 0..n {
-        if component[v].is_none() {
-            // Start marking component for vertex v
-            mark_component_bfs(v, &graph, &mut component, component_no);
-            component_no += 1;
-        }
-    }
+    // Print the results
+    println!("Mean distance between different vertices: {:.2}", mean_dist);
+    println!("Maximum distance between different vertices: {}", max_dist);
+    println!("Median distance between different vertices: {:.2}", median_dist);
+
 }
 
 
@@ -130,30 +124,87 @@ fn compute_and_print_distance_bfs(start: Vertex, graph: &Graph) {
             }
         }
     }
-
-    // Print distances from start vertex to each other vertex
-    // println!("Vertex: Distance from start vertex {}:", start);
-    // for v in 0..graph.n {
-    //     match distance[v] {
-    //         Some(dist) => println!("{}: {}", v, dist),
-    //         None => println!("{}: Unreachable", v),
-    //     }
-    // }
 }
 
-// Function to mark components in the graph using BFS
-fn mark_component_bfs(vertex: Vertex, graph: &Graph, component: &mut Vec<Option<Component>>, component_no: Component) {
-    component[vertex] = Some(component_no);
+// // Function to mark components in the graph using BFS
+// fn mark_component_bfs(vertex: Vertex, graph: &Graph, component: &mut Vec<Option<Component>>, component_no: Component) {
+//     component[vertex] = Some(component_no);
 
+//     let mut queue = VecDeque::new();
+//     queue.push_back(vertex);
+
+//     while let Some(v) = queue.pop_front() {
+//         for &w in &graph.outedges[v] {
+//             if component[w].is_none() {
+//                 component[w] = Some(component_no);
+//                 queue.push_back(w);
+//             }
+//         }
+//     }
+// }
+
+// Function to calculate graph statistics (mean, max, median distances) from a starting vertex
+fn calculate_graph_statistics(graph: &Graph, start_vertex: Vertex) -> (f64, u32, f64) {
+    let mut distances = vec![None; graph.n];
+    compute_distances(start_vertex, graph, &mut distances);
+
+    // Filter out None values (unreachable vertices)
+    let filtered_distances: Vec<u32> = distances.iter().filter_map(|&dist| dist).collect();
+
+    // Calculate mean distance
+    let mean_distance = mean(&filtered_distances);
+
+    // Calculate maximum distance
+    let max_distance = max(&filtered_distances);
+
+    // Calculate median distance
+    let median_distance = median(&filtered_distances);
+
+    (mean_distance, max_distance, median_distance)
+}
+
+// Helper function to calculate distances from the start vertex using BFS
+fn compute_distances(start: Vertex, graph: &Graph, distances: &mut Vec<Option<u32>>) {
+    distances[start] = Some(0);
     let mut queue = VecDeque::new();
-    queue.push_back(vertex);
+    queue.push_back(start);
 
     while let Some(v) = queue.pop_front() {
-        for &w in &graph.outedges[v] {
-            if component[w].is_none() {
-                component[w] = Some(component_no);
-                queue.push_back(w);
+        for &u in &graph.outedges[v] {
+            if distances[u].is_none() {
+                distances[u] = Some(distances[v].unwrap() + 1);
+                queue.push_back(u);
             }
         }
+    }
+}
+
+// Function to calculate the mean distance from a list of distances
+fn mean(distances: &Vec<u32>) -> f64 {
+    let total: u32 = distances.iter().copied().sum();
+    let count = distances.len();
+    total as f64 / count as f64
+}
+
+// Function to calculate the maximum distance from a list of distances
+fn max(distances: &Vec<u32>) -> u32 {
+    *distances.iter().max().unwrap()
+}
+
+// Function to calculate the median distance from a list of distances
+fn median(distances: &Vec<u32>) -> f64 {
+    let mut sorted_distances = distances.clone();
+    sorted_distances.sort();
+
+    let len = sorted_distances.len();
+
+    if len % 2 == 1 {
+        // If the list length is odd, return the middle element
+        sorted_distances[len / 2] as f64
+    } else {
+        // If the list length is even, return the average of the two middle elements
+        let mid1 = sorted_distances[len / 2 - 1] as f64;
+        let mid2 = sorted_distances[len / 2] as f64;
+        (mid1 + mid2) / 2.0
     }
 }
