@@ -94,9 +94,9 @@ fn find_neighbors(user: &UserData, data: &[UserData]) -> Vec<UserData> {
 
     for other_user in data {
         // Check if the other user is a potential neighbor
-        if (user.age - other_user.age).abs() <= 5
+        if (user.age - other_user.age).abs() <= 10
             && user.gender == other_user.gender
-            && (user.time_spent - other_user.time_spent).abs() <= 10
+            && (user.time_spent - other_user.time_spent).abs() <= 0_5
         {
             neighbors.push(other_user.clone());
         }
@@ -105,14 +105,18 @@ fn find_neighbors(user: &UserData, data: &[UserData]) -> Vec<UserData> {
     neighbors
 }
 
+
 fn main() {
+    // Get command line arguments
     let args: Vec<String> = env::args().collect();
 
+    // Check for minimum number of arguments
     if args.len() < 3 {
         eprintln!("Usage: {} <file_path> <has_headers>", args[0]);
         process::exit(1);
     }
 
+    // Extract file path and headers flag from arguments
     let file_path = &args[1];
     let has_headers = match args[2].as_str() {
         "true" => true,
@@ -125,20 +129,71 @@ fn main() {
 
     // Read data from the CSV file
     let data = read_csv(file_path, has_headers);
+    
+    // Proceed only if data is successfully loaded
+    if let Ok(data) = data {
+        // Select a user to find the closest neighbors (you can modify this to choose the user dynamically)
+        let selected_user_index = 0; // Change this index as per requirement
+        let user = &data[selected_user_index];
 
-    // Perform random walks and compute final destination probabilities
-    match walks(&data.unwrap()) {
-        Ok(final_destination) => {
-            println!("Final destination probabilities:");
-            for (index, probability) in final_destination.iter().enumerate() {
-                println!("User {}: {:.2}", index, probability);
-            }
+        // Find the 10 closest neighbors for the selected user
+        let closest_neighbors = closest_neighbors(user, &data);
+
+        // Print the 10 closest neighbors and their distances
+        println!("10 closest neighbors for User {}:", selected_user_index);
+        for (neighbor, distance) in closest_neighbors {
+            println!("Neighbor: {:?}, Distance: {:.2}", neighbor, distance);
         }
-        Err(err) => {
-            eprintln!("Error computing walks: {}", err);
-            process::exit(1);
+
+        // Perform random walks and compute final destination probabilities
+        let final_destination = walks(&data);
+        
+        // Print final destination probabilities
+        println!("Final destination probabilities:");
+        for (index, probability) in final_destination.iter().enumerate() {
+            println!("User {}: {:.2}", index, probability);
         }
+    } else {
+        // Handle error when loading data
+        eprintln!("Error reading CSV file: {}", data.unwrap_err());
+        process::exit(1);
     }
 }
 
 
+fn distance(user1: &UserData, user2: &UserData) -> f64 {
+    // Calculate Euclidean distance based on age, time spent, and other attributes
+    let age_diff = (user1.age - user2.age).abs() as f64;
+    let time_spent_diff = (user1.time_spent - user2.time_spent).abs() as f64;
+    
+    // Combine the differences into a single distance value
+    // Using Euclidean distance as a metric
+    ((age_diff.powi(2) + time_spent_diff.powi(2)).sqrt())
+}
+
+fn closest_neighbors(user: &UserData, data: &[UserData]) -> Vec<(UserData, f64)> {
+    // Create a vector to hold distances
+    let mut distances: Vec<(UserData, f64)> = Vec::new();
+    
+    // Calculate distances between the user and all other users in the data
+    for other_user in data {
+        if other_user != user {
+            let distance = distance(user, other_user);
+            distances.push((other_user.clone(), distance));
+        }
+    }
+    
+    // Sort the distances in ascending order based on the distance value
+    distances.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+    
+    // Return the 10 closest neighbors
+    distances.into_iter().take(10).collect()
+}
+
+// Usage example:
+// let user: UserData = ...; // Define a user
+// let data: Vec<UserData> = ...; // Define a dataset
+// let closest_neighbors = find_closest_neighbors(&user, &data);
+// for (neighbor, distance) in closest_neighbors {
+//     println!("Neighbor: {:?}, Distance: {:.2}", neighbor, distance);
+// }
