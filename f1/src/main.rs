@@ -208,3 +208,64 @@ fn median(distances: &Vec<u32>) -> f64 {
         (mid1 + mid2) / 2.0
     }
 }
+
+
+#[cfg(test)]
+#[test]
+mod tests{
+    use super::*;
+    // A function to get a subset of data from the Facebook data file
+    // You can adjust this function to read a specific portion of the file
+   fn test_sum() {
+    let file = File::open("facebook_combined.txt").expect("Could not open file");
+    let buf_reader = BufReader::new(file);
+    
+    let mut edges = Vec::new();
+    let mut unique_nodes = HashSet::new();
+    
+    // Read first few lines as a sample subset
+    for line in buf_reader.lines().take(100) {
+        let line_str = line.expect("Error reading line");
+        let v: Vec<&str> = line_str.trim().split_whitespace().collect();
+        let x = v[0].parse::<usize>().expect("Failed to parse vertex");
+        let y = v[1].parse::<usize>().expect("Failed to parse vertex");
+        edges.push((x, y));
+        unique_nodes.insert(x);
+        unique_nodes.insert(y);
+    }
+    
+    let num_unique = unique_nodes.len();
+            
+    // Create adjacency list from edges and unique nodes
+    let unique_nodes = (0..num_unique).collect();
+    let adj_list = adjacency_list(edges, unique_nodes);
+    
+    // You can define your expected adjacency list here based on the sample data
+    // For now, just checking if the function runs without any issue
+    assert!(!adj_list.is_empty());
+
+    
+// Test for `calculate_graph_statistics` function using the sample subset of Facebook data
+    
+    let graph = Graph { n: num_unique, outedges: adj_list };
+    
+    // Calculate graph statistics from vertex 0
+    let (mean_dist, max_dist, median_dist) = calculate_graph_statistics(&graph, 0);
+    
+            // You can define expected mean, max, and median distances based on the sample data
+            // For now, just checking if the function runs without any issue
+    assert!(mean_dist >= 0.0);
+    assert!(max_dist > 0);
+    assert!(median_dist >= 0.0);
+
+
+// Test for `compute_and_print_distance_bfs` function
+    // Expected distances from vertex 0
+    let mut computed_distances = vec![None; graph.n];
+    compute_distances(0, &graph, &mut computed_distances);
+    
+    // Define expected distances based on the sample data
+    // For now, just checking if the function runs without any issue
+    assert!(!computed_distances.is_empty());
+    }
+}
