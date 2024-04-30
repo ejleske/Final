@@ -50,4 +50,11 @@ pub fn distances_bfs(start: Vertex, graph: &Graph, distances: &mut Vec<Option<u3
             }
         }
     }
+
+    println!("Distances from starting vertex {}:", start);
+    for (index, &dist) in distances.iter().enumerate() {
+        if let Some(d) = dist {
+            println!("Vertex {}: Distance {}", index, d);
+        }
+    }
 }

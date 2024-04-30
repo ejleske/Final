@@ -34,15 +34,15 @@ fn main() {
     // Run BFS from the starting vertex (you can change this to any vertex you want)
     let start_vertex = 0;
 
-    // // Print the adjacency list (adjacency map)
-    // println!("Adjacency map:");
-    // for (vertex, neighbors) in graph.outedges.iter().enumerate() {
-    //     print!("Vertex {}: ", vertex);
-    //     for &neighbor in neighbors {
-    //         print!("{} ", neighbor);
-    //     }
-    //     println!();
-    // }
+    // Print the adjacency list (adjacency map)
+    println!("Adjacency map:");
+    for (vertex, neighbors) in graph.outedges.iter().enumerate() {
+         print!("Vertex {}: ", vertex);
+         for &neighbor in neighbors {
+             print!("{} ", neighbor);
+        }
+         println!();
+    }
 
     // Calculate mean, max, and median distances
     let (mean_dist, max_dist, median_dist) = calculate_graph_statistics(&graph, start_vertex);
@@ -162,7 +162,7 @@ mod tests{
 // Test for `compute_and_print_distance_bfs` function
     // Expected distances from vertex 0
     let mut computed_distances = vec![None; graph.n];
-    compute_distances(0, &graph, &mut computed_distances);
+    distances_bfs(0, &graph, &mut computed_distances);
     
     // Define expected distances based on the sample data
     // For now, just checking if the function runs without any issue
