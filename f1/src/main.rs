@@ -35,6 +35,7 @@ fn main() {
     let start_vertex = 0;
 
     // Print the adjacency list (adjacency map)
+    // can make the following into a comment so that it does not return the adjacecy list:
     println!("Adjacency map:");
     for (vertex, neighbors) in graph.outedges.iter().enumerate() {
          print!("Vertex {}: ", vertex);
@@ -43,7 +44,8 @@ fn main() {
         }
          println!();
     }
-
+    // comment out until this point to remove the adjacency list
+     
     // Calculate mean, max, and median distances
     let (mean_dist, max_dist, median_dist) = calculate_graph_statistics(&graph, start_vertex);
 
